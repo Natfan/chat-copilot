@@ -33,32 +33,41 @@ See https://learn.microsoft.com/en-us/azure/active-directory/develop/authenticat
 #>
 
 param(
-    [Parameter(Mandatory = $true)]
-    [string]$AIService,
+    [Parameter(Mandatory)]
+    [ValidateSet("OpenAI", "AzureOpenAI")
+    [string]
+    $AIService,
     
-    [Parameter(Mandatory = $true)]
-    [string]$APIKey,
+    [Parameter(Mandatory)]
+    [string]
+    $APIKey,
 
-    [Parameter(Mandatory = $false)]
-    [string]$Endpoint,
+    [Parameter()]
+    [string]
+    $Endpoint,
     
-    [Parameter(Mandatory = $false)]
-    [string]$CompletionModel,
+    [Parameter()]
+    [string]
+    $CompletionModel,
 
-    [Parameter(Mandatory = $false)]
-    [string]$EmbeddingModel, 
+    [Parameter()]
+    [string]
+    $EmbeddingModel, 
 
-    [Parameter(Mandatory = $false)]
-    [string] $FrontendClientId,
+    [Parameter()]
+    [string]
+    $FrontendClientId,
 
-    [Parameter(Mandatory = $false)]
-    [string] $BackendClientId,
+    [Parameter()]
+    [string]
+    $BackendClientId,
 
-    [Parameter(Mandatory = $false)]
-    [string] $TenantId,
+    [Parameter()]
+    [string]$TenantId,
 
-    [Parameter(Mandatory = $false)]
-    [string] $Instance
+    [Parameter()]
+    [string]
+    $Instance
 )
 
 # Get defaults and constants
@@ -73,8 +82,7 @@ if ($AIService -eq $varOpenAI) {
     }
 
     # TO DO: Validate model values if set by command line.
-}
-elseif ($AIService -eq $varAzureOpenAI) {
+} elseif ($AIService -eq $varAzureOpenAI) {
     if (!$CompletionModel) {
         Write-Host "No completion model provided - Defaulting to $varCompletionModelAzureOpenAI"
         $CompletionModel = $varCompletionModelAzureOpenAI
@@ -103,11 +111,9 @@ if ($FrontendClientId -and $BackendClientId -and $TenantId) {
     if (!$Instance) {
         $Instance = $varInstance
     }
-}
-elseif (!$FrontendClientId -and !$BackendClientId -and !$TenantId) {
+} elseif (!$FrontendClientId -and !$BackendClientId -and !$TenantId) {
     $authType = $varNone
-}
-else {
+} else {
     Write-Error "To use Azure AD authentication, please set -FrontendClientId, -BackendClientId, and -TenantId."
     exit(1)
 }
@@ -120,8 +126,7 @@ Write-Host "#########################"
 if ($IsLinux) {
     dotnet dev-certs https
     if ($LASTEXITCODE -ne 0) { exit(1) }
-}
-else {
+} else {
     # Windows/MacOS
     dotnet dev-certs https --trust
     if ($LASTEXITCODE -ne 0) { exit(1) }
@@ -139,8 +144,7 @@ if ($AIService -eq $varOpenAI) {
             EmbeddingModel = $EmbeddingModel;
         }
     };
-}
-else {
+} else {
     dotnet user-secrets set --project $webapiProjectPath KernelMemory:Services:AzureOpenAIText:APIKey $ApiKey
     if ($LASTEXITCODE -ne 0) { exit(1) }
     dotnet user-secrets set --project $webapiProjectPath KernelMemory:Services:AzureOpenAIEmbedding:APIKey $ApiKey
@@ -166,7 +170,7 @@ $appsettingsOverrides = @{
             ClientId = $BackendClientId;
             Scopes   = $varScopes
         }
-    };
+    }
     KernelMemory = @{
         TextGeneratorType = $AIService;
         DataIngestion     = @{
@@ -176,10 +180,10 @@ $appsettingsOverrides = @{
             EmbeddingGeneratorType = $AIService
         };
         Services          = $AIServiceOverrides;
-    };
+    }
     Frontend = @{
         AadClientId = $FrontendClientId
-    };
+    }
 }
 $appSettingsJson = -join ("appsettings.", $varASPNetCore, ".json");
 $appsettingsOverridesFilePath = Join-Path $webapiProjectPath $appSettingsJson
